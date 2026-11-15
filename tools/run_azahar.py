@@ -35,6 +35,7 @@ import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FS = 16756991 / 512
+AUDIO_BLOCK = 128
 
 
 def mailbox_indices():
@@ -142,31 +143,31 @@ def build_script(a):
         bpm_checks = []
 
         def to_file(f):
-            return tabs_right(s, f, 7)
+            # opening FILE reads all 16 slots from the SD card, which takes
+            # the main loop about a second in the emulator: wait it out
+            return tabs_right(s, f, 7) + 90
 
         f = to_file(f)                                  # slot 01 (v2): A -> LOAD, A arm, A load
         for _ in range(3):
-            s.press(f, "A")
-            f += 15
+            s.press(f, "A", hold=6)
+            f += 40
         s.at(f + 30, "shot", "loaded_v2")
         s.at(f + 60, "stats"); bpm_checks.append((f + 60, 133, "ETCH DS save v2 (slot 01)"))
         f = to_file(f + 90)                             # slot 02 (v1)
-        s.press(f, "DOWN"); f += 15
-        for _ in range(3):
-            s.press(f, "A")
-            f += 15
+        # FILE remembers its cursor: still on the button row after the load
+        for k in ["UP", "DOWN", "A", "A", "A"]:          # slots, slot 02, LOAD, arm, load
+            s.press(f, k, hold=6)
+            f += 40
         s.at(f + 60, "stats"); bpm_checks.append((f + 60, 97, "ETCH DS save v1 (slot 02)"))
         f = to_file(f + 90)                             # GB: slot -> buttons, to GB, list
-        s.press(f, "A"); f += 15
-        s.press(f, "RIGHT"); f += 15
-        s.press(f, "RIGHT"); f += 15
-        s.press(f, "A"); f += 30                        # GB list
+        for k in ["RIGHT", "RIGHT", "A"]:              # LOAD -> GB -> the Game Boy list
+            s.press(f, k, hold=6); f += 40
+        f += 60                                         # the GB list is read from the card
         s.at(f, "shot", "gb_list")
-        s.press(f, "A"); f += 15                        # slot 1 -> button row
-        s.press(f, "LEFT"); f += 15                     # IMPORT
-        s.press(f, "A"); f += 15                        # arm
-        s.press(f, "A"); f += 15                        # import
+        for k in ["LEFT", "LEFT", "LEFT", "A", "A"]:    # GB -> IMPORT (slot 1), arm, import
+            s.press(f, k, hold=6); f += 40
         s.at(f + 60, "stats"); bpm_checks.append((f + 60, 111, "ETCH Game Boy import (slot 1)"))
+        s.at(f + 60, "shot", "imported_gb")
         a.bpm_checks = bpm_checks
         end = max(end, f + 120)
     s.at(end, "stats")
@@ -287,18 +288,27 @@ def main():
     long_gaps = [r for r in runs if r >= 64]
     print("silent gaps of 64+ samples after the start: %d" % len(long_gaps))
     if not (a.stress or a.punch or a.tour or a.saves):
+        # The host renders the same song from the same seed (after a pre-roll
+        # of silence, as the console renders silence under the title).  Up to
+        # the first evolution it must be identical, sample for sample.  At each
+        # mutation CORROSION stirs the moment's entropy (a free-running timer,
+        # ETCH's ui_entropy ^ hw_noise) into its choices, on every ETCH, so
+        # from there each listen evolves differently: by design.
         seed = m("SM_SEED")
         ref_path = os.path.join(out, "ref.raw")
         secs = min(a.seconds - 2, (len(x) - first) / FS - 0.5)
-        subprocess.check_call([os.path.join(ROOT, "build/host/render_ref"), str(seed), "%.2f" % secs, ref_path])
+        subprocess.check_call([os.path.join(ROOT, "build/host/render_ref"), str(seed), "%.2f" % secs, ref_path, "500"])
         ref = np.fromfile(ref_path, dtype=np.int16).reshape(-1, 2)
         rnz = np.nonzero(np.any(ref != 0, axis=1))[0][0]
         n = min(len(ref) - rnz, len(x) - first)
-        same = np.array_equal(ref[rnz:rnz + n], x[first:first + n])
+        bars4 = int((4 * 4 - 0.25) * 60.0 / 124 * FS)   # the first commit: step 16's gate point, before bar 5
         diff = np.nonzero(np.any(ref[rnz:rnz + n] != x[first:first + n], axis=1))[0]
-        print("emulator vs host render of seed %04x: %d frames (%.1f s) compared: %s" %
-              (seed, n, n / FS, "IDENTICAL, sample for sample" if same else
-               "first difference at frame %d (%.3f s), %d frames differ" % (diff[0], diff[0] / FS, len(diff))))
+        first_diff = diff[0] if len(diff) else n
+        same = first_diff >= min(bars4, n)
+        print("emulator vs host render of seed %04x: identical for the first %d frames (%.2f s)%s" %
+              (seed, first_diff, first_diff / FS,
+               "; the first evolution lands at %.2f s (end of bar 4), where timing entropy enters by design" % (bars4 / FS)
+               if same else " -- BEFORE the first evolution: FAIL"))
         if not same:
             ok = False
     print("PASS" if ok else "FAIL")

@@ -38,9 +38,10 @@ tools/               sync_core.sh, check_core_upstream.sh, check_audio_path.py,
  ┌────────────────────────────────────────────────────────────────────────────┐
  │ audio thread, priority 0x18                                                 │
  │   sleeps on a LightEvent; ndsp's callback signals it once per DSP frame      │
- │   (160 samples, 4.89 ms); it then renders blocks until 3 are queued:        │
+ │   (160 samples, 4.89 ms); it then renders blocks into a looping ring until   │
+ │   it is 3 blocks ahead of the DSP's play position:                           │
  │     pump_block: commands -> seq_render_block -> audio_render_block (+PUNCH)  │
- │                 -> retro buffer -> interleave -> ndspChnWaveBufAdd           │
+ │                 -> retro buffer -> interleave -> the ring                     │
  │ ndsp's own thread, priority 0x2F (libctru)                                   │
  │ main thread, priority 0x30, 60 Hz                                            │
  │   input, PUNCH pad, CORROSION (evo_frame), bottom screen (ui.c), top screen, │
@@ -57,13 +58,23 @@ tools/               sync_core.sh, check_core_upstream.sh, check_audio_path.py,
   **The audio thread must stay on the same core as the UI.** Moving it to another core would need a lock around the drum-buffer swap. This is noted in `docs/IDEAS.md`.
 * **Commands.** On the DS, the ARM9 sent commands to the ARM7 over a FIFO, and they ran between two block interrupts. On the 3DS, `app_send` writes to a single-producer, single-consumer ring of 256 words. The audio thread drains it before it sequences each block, so a command lands at the same point in the block stream as on the DS. A memory barrier orders `SH->edit_pat` (and the other shared fields) before the command that refers to it. The ring never filled in any test.
 * **Shared state.** `shared_t` (core/common/ipc.h) is the same structure the DS shares between its two CPUs. On the 3DS it's an ordinary static, with the same writer and reader rules (ETCH DS ARCHITECTURE.md §3). The DS's "ARM7" fields are written by the audio thread, and its "ARM9" fields by the main thread.
-* **The audio thread never waits on the UI.** It never allocates, and it never takes a lock the UI can hold. `tools/check_audio_path.py` proves this from the ELF (§6). The only locks it reaches are ndsp's own short wave-buffer lock (`LightLock`), which the UI never touches, and its own `LightEvent` sleep.
+* **The audio thread never waits on the UI.** It never allocates, and it never takes a lock. `tools/check_audio_path.py` proves this from the ELF (§6). Beyond the block pump, it reaches only its own `LightEvent` sleep, the play-position read and the cache flush.
 
 ## 3. Streaming and latency
 
 * **One stereo PCM16 ndsp channel** at `NDSP_SAMPLE_RATE` = `SYSCLOCK_SOC / 512` = 32 728.5 Hz. That is the DS output rate, and the rate the core is designed for (`FS_HZ`). Interpolation is off, so the DSP plays the samples 1:1 with no resampling.
-* **Eight wave buffers of one block each** (128 frames, 3.91 ms). The audio thread keeps **3 blocks** queued (`AUDIO3DS_DEPTH_DEFAULT`). Each render is measured as the queued samples minus the play position in the current buffer, which is how far ahead of the speaker the block is, and the result goes into the stats.
-* **A dropout** is a wake that finds nothing queued. The count goes in `SH->dropouts`, as on the DS.
+* **A looping ring, as on the DS.** The channel plays one looping wave buffer of 1 024 frames (8 blocks, 31 ms) forever.
+  * On each DSP frame, the audio thread reads the play position (`ndspChnGetSamplePos`) and unwraps it into an absolute count.
+  * It then renders blocks into the ring until it is **3 blocks** (`AUDIO3DS_DEPTH_DEFAULT`, 384 samples) ahead of the speaker.
+  * This is the DS design: there, the sound hardware looped a ring that the ARM9 wrote two blocks ahead of.
+* **Why not a queue of wave buffers.** That was the first design. Measured in Azahar, a new wave buffer only started on the DSP frame *after* the one in which the previous buffer ended, so every buffer boundary cost silence:
+  * 128-sample buffers lost 32 samples in every 160-sample frame.
+  * 256-sample buffers lost 64 samples in every second frame.
+  * 160-sample buffers lost every other frame.
+
+  A looping buffer has no boundaries, and Azahar's DSP re-reads a looping PCM16 buffer every frame, which is exactly the use it's written for. Whether the console's DSP has the same boundary behaviour is unverified. The ring avoids the question either way.
+* **Latency** is measured at each render as the write position minus the play position: how far ahead of the speaker the new block is. In the emulator it averaged **8.8 ms** (6.9–10.8 ms) on Old and New 3DS. On top of that comes the DSP's own output stage of about one frame (4.9 ms), so about **11–16 ms** from sequencer to speaker.
+* **A dropout** means the play position passed the write position, so the DSP played stale audio. The writer then jumps ahead, and the event counts in `SH->dropouts`, as on the DS. In every emulator run, including the CPU stress test, there were none.
 * **The sequencer runs in render time**, exactly as on the DS. `seq_core` advances its phase accumulator per 32-sample sub-block inside `seq_render_block`, so tempo, swing (with ETCH II's fix) and the edit epoch are sample-accurate, whatever the thread scheduling does.
 * **The CPU meter keeps ETCH DS's units.** `render.arm.c`'s `host_clock` hook is set to the 3DS tick divided by 8: 268 111 856 / 8 = 33 513 982 Hz, exactly the DS bus clock. Every stage's percentage of a block period is therefore directly comparable with ETCH DS's.
 
@@ -118,16 +129,16 @@ pump_block: the limited mix -> the mix retro buffer -> ndsp
 | The DS path and the 3DS path render identically | `tests/host/test_parity.c`: 64 s script, byte-compare |
 | …with the consoles' own compilers | `tools/arm_parity.sh`: BlocksDS GCC (ARM9 + ARM7 flags), devkitARM GCC (ARM11), run under qemu-arm, byte-compare |
 | No division, float, allocation or lock on the audio path | `tools/check_audio_path.py etch_3ds.elf` |
-| The .3dsx plays the same song | `tools/run_azahar.py`: emulator recording vs host render of the same seed |
+| The .3dsx plays the same song | `tools/run_azahar.py`: the emulator's recording equals the host render of the same seed, sample for sample, up to the first evolution (where CORROSION takes the moment's entropy, by design) |
 | PUNCH, the retro buffer, the command ring | `tests/host/test_punch.c` |
 
 ## 7. Memory (milestone 1)
 
 | | Size | Notes |
 |---|---|---|
-| `.text` + `.rodata` | about 270 KB | wavetables (64 KB) and the other DSP tables, fonts |
+| `.text` + `.rodata` | about 290 KB | wavetables (64 KB) and the other DSP tables, fonts |
 | `.bss` | about 1.6 MB | retro buffer (1 MB), screen bitmaps (432 KB), colour LUT (64 KB), delay line (64 KB), shared block |
 | heap | under 1 MB | FOUNDRY's drum samples (at most 2 s each) |
-| linear heap | 4 KB | the ndsp wave buffers |
+| linear heap | 4 KB | the ndsp ring (1 024 stereo frames) |
 
 That's well under the Old 3DS's 64 MB application budget, leaving room for VAPOUR, RUST, mic samples and a longer retro buffer.

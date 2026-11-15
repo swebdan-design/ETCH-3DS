@@ -24,6 +24,10 @@ This is **milestone 1, "It squelches in 3D"**. It ports ETCH DS to the 3DS sound
 
 ![ETCH 3DS: title, LIVE, PUNCH, XY, PANEL, DRUM, KEYS, GEN, SONG, FILE, ABOUT](docs/images/screens.png)
 
+Running in Azahar (PUNCH low-pass, CPU test, XY, KEYS, a Game Boy song imported, the title):
+
+![ETCH 3DS in the Azahar emulator](docs/images/azahar.png)
+
 The milestone report is [`docs/MILESTONE1_REPORT.md`](docs/MILESTONE1_REPORT.md), the design is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), and parked ideas are in [`docs/IDEAS.md`](docs/IDEAS.md).
 
 ## Controls
@@ -108,7 +112,7 @@ python3 tools/run_azahar.py --seconds 60
   * It presses the buttons, moves the Circle Pad and touches the screen.
   * It records the audio and takes screenshots.
   * It reads the CPU meter, latency, dropouts and sequencer counters from emulated RAM.
-  * It checks that the emulator plays exactly the samples the shared core renders on the host from the same seed.
+  * It checks that the emulator plays exactly the samples the shared core renders on the host from the same seed. That holds up to the first evolution, where CORROSION takes the moment's entropy by design.
 
 ## Layout
 

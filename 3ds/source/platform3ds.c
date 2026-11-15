@@ -106,7 +106,7 @@ void gfx_present(void)
 }
 
 static uint32_t frame_t0;
-static uint32_t ft_sum, ft_n;
+static uint32_t ft_sum, ft_n, ft_max;
 
 /* the end of a frame: present, wait for VBlank.  The time from the end of the
  * previous VBlank wait to here is the UI frame time (input, CORROSION, both
@@ -115,10 +115,16 @@ int frame_end(void)
 {
     uint32_t t;
     gfx_present();
-    t = clk_bus() - frame_t0;
-    ft_sum += t;
-    if (t > ui_frame_ticks_max) ui_frame_ticks_max = t;
-    if (++ft_n >= 64) { ui_frame_ticks_avg = ft_sum >> 6; ft_sum = 0; ft_n = 0; }
+    if (frame_t0) {                                  /* not the very first frame */
+        t = clk_bus() - frame_t0;
+        ft_sum += t;
+        if (t > ft_max) ft_max = t;
+        if (++ft_n >= 64) {                          /* publish the last 64 frames */
+            ui_frame_ticks_avg = ft_sum >> 6;
+            ui_frame_ticks_max = ft_max;
+            ft_sum = 0; ft_n = 0; ft_max = 0;
+        }
+    }
     gspWaitForVBlank();
     frame_t0 = clk_bus();
     return aptMainLoop();

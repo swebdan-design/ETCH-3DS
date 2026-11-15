@@ -7,11 +7,11 @@
 #include <stdint.h>
 #include "ipc.h"
 
-#define AUDIO3DS_DEPTH_DEFAULT 3    /* blocks queued ahead: 3 x 3.91 ms */
+#define AUDIO3DS_DEPTH_DEFAULT 3    /* blocks rendered ahead of the speaker: 3 x 3.91 ms */
 
 typedef struct {
     uint32_t wakes, blocks;
-    uint32_t queued_min;            /* fewest blocks still queued at a wake */
+    uint32_t queued_min;            /* fewest whole blocks still ahead of the speaker at a wake */
     uint32_t lat_sum, lat_n, lat_min, lat_max;   /* samples ahead of the speaker */
     uint8_t  started, no_dsp;       /* no_dsp: ndspInit failed (no DSP firmware) */
 } audio3ds_stats_t;

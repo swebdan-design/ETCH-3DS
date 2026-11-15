@@ -5,7 +5,11 @@
  * interleaved L/R int16.  The emulator's recording of the .3dsx must contain
  * exactly these samples from the moment START landed.
  *
- *   render_ref SEED SECONDS OUT.raw
+ *   render_ref SEED SECONDS OUT.raw [PREROLL_BLOCKS]
+ *
+ * PREROLL_BLOCKS of silence are rendered (and not written) before START, as
+ * the console renders silence under the title screen: ACID's smoothed
+ * controls settle there, so the song starts from the same state.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,11 +30,12 @@ int main(int argc, char **argv)
 {
     static shared_t sh;
     uint16_t seed;
-    uint32_t nblk, b, i;
+    uint32_t nblk, b, i, pre = 0;
     FILE *f;
     if (argc < 4) { printf("usage: render_ref SEED SECONDS OUT.raw\n"); return 2; }
     seed = (uint16_t)strtoul(argv[1], NULL, 0);
     nblk = (uint32_t)(atof(argv[2]) * 32728.5 / AUDIO_BLOCK);
+    if (argc > 4) pre = (uint32_t)strtoul(argv[4], NULL, 0);
     f = fopen(argv[3], "wb");
     if (!f) return 1;
     memset(&sh, 0, sizeof sh);
@@ -42,9 +47,14 @@ int main(int argc, char **argv)
     audio_engine_init();
     foundry_build();
     seq_init(&sh);
+    for (b = 0; b < pre; b++) {
+        int16_t l[AUDIO_BLOCK], r[AUDIO_BLOCK];
+        seq_render_block(b);
+        audio_render_block(&sh.ev[b & (AUDIO_NBLK - 1)], b, l, r);
+    }
     evo_seed(seed);
     app_send(CMD(CMD_START, seed));
-    for (b = 0; b < nblk; b++) {
+    for (b = pre; b < pre + nblk; b++) {
         int16_t l[AUDIO_BLOCK], r[AUDIO_BLOCK], lr[2 * AUDIO_BLOCK];
         if ((b & 3) == 0) evo_frame();
         seq_render_block(b);

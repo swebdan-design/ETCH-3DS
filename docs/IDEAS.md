@@ -18,7 +18,8 @@ Ideas that came up while building milestone 1. They're out of scope for now (pil
 ## Audio
 
 * **The audio thread and the UI must share a core.** The shared core's main-loop code relies on renders being atomic relative to the main thread. That's how `foundry_rebuild` swaps buffers without a lock. If VAPOUR polyphony moves to New 3DS cores 2–3, put only VAPOUR there, fed by its own SPSC ring. Moving the core render off core 0 would need a lock in `foundry_rebuild`, which is an ETCH-DS change.
-* **Queue depth.** 3 blocks (about 11.7 ms ahead of the DSP) held with no dropouts in the emulator. Real hardware may allow 2 (7.8 ms). Make it a setting and measure on hardware.
+* **Lead.** The renderer stays 3 blocks ahead of the DSP's play position (8.8 ms average), with no dropouts in the emulator. Real hardware may allow 2 blocks. Make it a setting and measure on hardware.
+* **A deterministic `hw_noise` test build** would let the emulator comparison run past the first evolution.
 * **VFP for the 3DS-only engines.** The PUNCH filter turned out cheap enough in fixed point. VAPOUR and RUST may use floats, as planned. `check_audio_path.py` would then need a per-root allow-list: floats permitted under the VAPOUR/RUST roots, still forbidden in the shared core.
 * **A selectable ACID mode** with 4× oversampling or a zero-delay-feedback ladder, as a new mode and never a silent change. CPU headroom allows it (see the milestone report).
 
