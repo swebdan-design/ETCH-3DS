@@ -26,6 +26,7 @@
 #include "audio_pump.h"
 #include "audio3ds.h"
 #include "punch.h"
+#include "stats_mailbox.h"
 
 static shared_t shared_store __attribute__((aligned(32)));
 
@@ -69,6 +70,52 @@ static void shared_init(void)
     SH->magic = SHARED_MAGIC;
 }
 
+/* ---- the stats mailbox (see stats_mailbox.h) ------------------------------ */
+static uint16_t start_seed;
+volatile uint32_t etch_stats[64] __attribute__((used));
+void stats_publish(void)
+{
+    volatile uint32_t *m = etch_stats;
+    int i;
+    m[SM_MAGIC] = SM_MAGIC_VALUE;
+    m[SM_FRAME]++;
+    m[SM_BLOCKS] = pump_blocks();
+    m[SM_DROPOUTS] = SH->dropouts;
+    m[SM_PLAYING] = SH->playing;
+    m[SM_STEP] = SH->step;
+    m[SM_COMMITS] = SH->evo_commits;
+    m[SM_STEPS_TOTAL] = SH->steps_total;
+    m[SM_GATES_TOTAL] = SH->gates_total;
+    m[SM_GATES_LATE] = SH->gates_late;
+    m[SM_WINDOWS] = astats.windows;
+    for (i = 0; i < 9; i++) m[SM_ST0 + i] = astats.avg_pct[i];
+    m[SM_TOTAL] = astats.avg_total;
+    m[SM_MAX_TOTAL] = astats.max_total_pct;
+    m[SM_SEQ] = pstats.seq_pct;
+    m[SM_PUNCH] = pstats.punch_pct;
+    m[SM_TAP] = pstats.tap_pct;
+    m[SM_OUT] = pstats.out_pct;
+    m[SM_UI_AVG] = ui_frame_ticks_avg;
+    m[SM_UI_MAX] = ui_frame_ticks_max;
+    m[SM_LAT_SUM] = a3s.lat_sum;
+    m[SM_LAT_N] = a3s.lat_n;
+    m[SM_LAT_MIN] = a3s.lat_min;
+    m[SM_LAT_MAX] = a3s.lat_max;
+    m[SM_QUEUED_MIN] = a3s.queued_min;
+    m[SM_WAKES] = a3s.wakes;
+    m[SM_PUNCH_STATE] = punch_state;
+    m[SM_PUNCH_MODE] = punch_mode;
+    m[SM_PUNCH_COUNT] = punch_count;
+    m[SM_NEW3DS] = plat_is_new3ds();
+    m[SM_NO_DSP] = a3s.no_dsp;
+    m[SM_CMD_WAITS] = pump_cmd_waits;
+    m[SM_CUR] = SH->cur;
+    m[SM_BPM] = SH->proj.synth.bpm;
+    m[SM_STRESS] = SH->stress;
+    m[SM_DEPTH] = audio3ds_depth;
+    m[SM_SEED] = start_seed;
+}
+
 /* the UI thread waits for the audio thread (command ring full: never seen) */
 static void wait_audio(void) { svcSleepThread(1000000LL); }
 
@@ -110,6 +157,7 @@ int main(int argc, char **argv)
         if (app_quit) goto out;
         ui_entropy = e;
         evo_seed(e);
+        start_seed = e;
         app_send(CMD(CMD_START, e));
     }
     ui_init();
@@ -126,6 +174,7 @@ int main(int argc, char **argv)
             if (!SH->playing) {
                 uint16_t e = (uint16_t)(ui_entropy ^ hw_noise());
                 evo_seed(e);                        /* the moment START was pressed */
+                start_seed = e;
                 app_send(CMD(CMD_START, e));
             } else {
                 app_send(CMD(CMD_STOP, 0));
@@ -137,6 +186,7 @@ int main(int argc, char **argv)
         app_fill_frame();
         ui_frame(down, held);
         top_frame();
+        stats_publish();
         if (!frame_end()) break;
     }
 out:

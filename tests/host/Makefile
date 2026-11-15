@@ -77,3 +77,13 @@ $(OUT)/test_screens: test_screens.c $(CORE)/common/seq_core.c $(ENGINE) $(APP) $
                      $(P3DS)/gfx.c $(P3DS)/ui.c $(P3DS)/scr_top.c $(P3DS)/title.c
 	@mkdir -p $(OUT)
 	$(HOSTCC) $(CFLAGS) -I$(P3DS) -o $@ $^ -lm $(WRAP)
+
+# save files for the emulator's end-to-end save test (tools/run_azahar.py)
+$(OUT)/mksaves: mksaves.c $(CORE)/engine/storage.c $(CORE)/engine/demo.c $(CORE)/engine/acid.arm.c \
+                $(CORE)/engine/foundry.arm.c $(CORE)/engine/fx.arm.c $(CORE)/engine/dsp_tables.c $(CORR)
+	@mkdir -p $(OUT)
+	$(HOSTCC) $(CFLAGS) -o $@ $^ -lm
+
+$(OUT)/render_ref: render_ref.c $(CORE)/common/seq_core.c $(ENGINE) $(APP) $(CORR)
+	@mkdir -p $(OUT)
+	$(HOSTCC) $(CFLAGS) -o $@ $^ -lm

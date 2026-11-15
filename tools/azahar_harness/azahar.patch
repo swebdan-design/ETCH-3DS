@@ -1,0 +1,14 @@
+diff --git a/src/citra_libretro/citra_libretro.cpp b/src/citra_libretro/citra_libretro.cpp
+index 54df4dc..5b398f4 100644
+--- a/src/citra_libretro/citra_libretro.cpp
++++ b/src/citra_libretro/citra_libretro.cpp
+@@ -341,6 +341,9 @@ static void setup_memory_maps() {
+             flags = RETRO_MEMDESC_SYSTEM_RAM;
+         } else if (vma.base >= Memory::VRAM_VADDR && vma.base < Memory::VRAM_VADDR_END) {
+             flags = RETRO_MEMDESC_VIDEO_RAM;
++        } else if (vma.base >= 0x00100000 && vma.base < Memory::HEAP_VADDR) {
++            /* ETCH 3DS harness: also expose the app's code/data/bss (0x00100000..) */
++            flags = RETRO_MEMDESC_SYSTEM_RAM;
+         } else {
+             continue;
+         }

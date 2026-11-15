@@ -16,7 +16,7 @@
 HOSTCC		?= cc
 PYTHON		?= python3
 
-.PHONY: all clean check test docker ds-check
+.PHONY: all clean check test docker docker-check ds-check
 
 all: check
 	@$(MAKE) --no-print-directory -f Makefile.3ds
@@ -35,8 +35,13 @@ check:
 
 test: check
 	@$(MAKE) --no-print-directory -C tests/host HOSTCC=$(HOSTCC)
-	@if [ -f etch_3ds.elf ]; then echo "== audio path (etch_3ds.elf) =="; \
-		$(PYTHON) tools/check_audio_path.py etch_3ds.elf | tail -1; fi
+	@if [ -f etch_3ds.elf ] && [ -x "$(DEVKITARM)/bin/arm-none-eabi-objdump" ]; then \
+		echo "== audio path (etch_3ds.elf) =="; $(PYTHON) tools/check_audio_path.py etch_3ds.elf | tail -1; \
+	else echo "== audio path: skipped (needs etch_3ds.elf and devkitARM; or: make docker-check) =="; fi
+
+# the audio-path check in devkitPro's Docker image
+docker-check:
+	docker run --rm -v "$(CURDIR)":/work -w /work devkitpro/devkitarm python3 tools/check_audio_path.py etch_3ds.elf
 
 docker:
 	docker run --rm -v "$(CURDIR)":/work -w /work devkitpro/devkitarm make
