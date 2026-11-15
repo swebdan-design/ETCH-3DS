@@ -1,0 +1,7 @@
+repository  swebdan-design/ETCH-DS
+branch      claude/etch-ds-build-prompt-3w47zj
+commit      b8ae6ebef791f7a0210f40c9feff574e918d5ca7
+map         corrosion/*            <- corrosion/*
+            common/*               <- common/{ipc.h,seq_core.c,seq_core.h}
+            engine/*               <- arm9/source/*
+            tests/*                <- tests/host/*

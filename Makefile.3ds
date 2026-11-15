@@ -1,0 +1,98 @@
+#---------------------------------------------------------------------------------
+# ETCH 3DS -- by Synth Centric
+# The .3dsx, from devkitPro's 3DS application template (devkitARM + libctru).
+# Run through the top-level Makefile (`make`), which checks core/ first.
+#---------------------------------------------------------------------------------
+.SUFFIXES:
+
+ifeq ($(strip $(DEVKITARM)),)
+$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
+endif
+
+TOPDIR ?= $(CURDIR)
+include $(DEVKITARM)/3ds_rules
+
+TARGET		:=	etch_3ds
+BUILD		:=	build/3ds
+# the 3DS platform layer, then the shared core (ETCH DS, unmodified)
+SOURCES		:=	3ds/source core/common core/engine core/corrosion
+DATA		:=
+INCLUDES	:=	3ds/source core/common core/engine core/corrosion
+GRAPHICS	:=
+ROMFS		:=
+
+APP_TITLE	:=	ETCH 3DS
+APP_DESCRIPTION	:=	A generative acid machine
+APP_AUTHOR	:=	Synth Centric
+ICON		:=	3ds/icon.png
+
+#---------------------------------------------------------------------------------
+ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
+
+CFLAGS	:=	-g -Wall -Wno-unused-function -O2 -mword-relocations \
+			-ffunction-sections \
+			$(ARCH)
+
+CFLAGS	+=	$(INCLUDE) -D__3DS__
+
+CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
+
+ASFLAGS	:=	-g $(ARCH)
+# the PUNCH taps into the shared renderer (see 3ds/source/punch.c)
+LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map) \
+			-Wl,--wrap=foundry_render -Wl,--wrap=fx_limit
+
+LIBS	:= -lctru -lm
+
+LIBDIRS	:= $(CTRULIB)
+
+#---------------------------------------------------------------------------------
+ifneq ($(notdir $(BUILD)),$(notdir $(CURDIR)))
+#---------------------------------------------------------------------------------
+
+export OUTPUT	:=	$(CURDIR)/$(TARGET)
+export TOPDIR	:=	$(CURDIR)
+
+export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
+
+export DEPSDIR	:=	$(CURDIR)/$(BUILD)
+
+CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
+
+export LD	:=	$(CC)
+
+export OFILES	:=	$(CFILES:.c=.o)
+
+export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+			-I$(CURDIR)/$(BUILD)
+
+export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+
+export _3DSXDEPS	:=	$(OUTPUT).smdh
+export APP_ICON := $(TOPDIR)/$(ICON)
+export _3DSXFLAGS += --smdh=$(CURDIR)/$(TARGET).smdh
+
+.PHONY: all clean
+
+all: $(BUILD)
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile.3ds
+
+$(BUILD):
+	@mkdir -p $@
+
+clean:
+	@echo clean ...
+	@rm -fr $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf
+
+#---------------------------------------------------------------------------------
+else
+
+$(OUTPUT).3dsx	:	$(OUTPUT).elf $(_3DSXDEPS)
+
+$(OUTPUT).elf	:	$(OFILES)
+
+-include $(DEPSDIR)/*.d
+
+#---------------------------------------------------------------------------------
+endif
