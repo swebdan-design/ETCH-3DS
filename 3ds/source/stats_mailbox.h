@@ -33,6 +33,8 @@ enum {
     SM_NEW3DS, SM_NO_DSP, SM_CMD_WAITS,
     SM_CUR, SM_BPM, SM_STRESS, SM_DEPTH,
     SM_SEED,            /* the entropy of the last START (seeds the living song) */
+    SM_FILL, SM_FILL_HOLD, SM_QUEUED, SM_SONG,      /* the series controls (SERIES_SPEC.md 2) */
+    SM_NOTE0, SM_FLAGS0,                            /* step 1 of the playing pattern's bass */
     SM_COUNT
 };
 #define SM_MAGIC_VALUE 0x53443345u

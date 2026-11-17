@@ -9,10 +9,12 @@
  * (a dirty rectangle per screen) into the 3DS framebuffers, converting the
  * colour and rotating, once per frame.
  *
- * Design system (unchanged from ETCH DS): flat surfaces, 1 px borders, 2 px
- * rounded corners, 6 px outer margin, 4 px gaps.  Small grey captions over
- * black values; black is what is active (lit buttons invert to white on
- * black), and steps CORROSION just changed are washed in grey, fading.
+ * Design system (SERIES_SPEC.md 4, as ETCH DS): flat surfaces, 1 px borders,
+ * 2 px rounded corners, 6 px outer margin, 4 px gaps.  Small grey captions
+ * over black values; black on white, minimal: hierarchy by weight alone; the
+ * accent #F45423 is what is active, happening now (lit buttons fill with it,
+ * text stays black), and steps CORROSION just changed are washed in the
+ * accent, fading.
  */
 #ifndef ETCH_3DS_GFX_H
 #define ETCH_3DS_GFX_H

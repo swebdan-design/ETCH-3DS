@@ -241,9 +241,14 @@ int gfx_text_w(int font, const char *s)
     return w ? w - 1 : 0;
 }
 
+/* SERIES_SPEC.md 4.2: text is never set in the accent.  Every attempt is
+ * counted, and the host screen test requires the count to stay 0. */
+uint32_t gfx_accent_text;
+
 int gfx_text(uint16_t *fb, int x, int y, int font, uint16_t c, const char *s)
 {
     int h = FONT_H(font);
+    if ((c & 0x7FFF) == (COL_ACCENT & 0x7FFF) || (c & 0x7FFF) == (COL_GLOW & 0x7FFF)) gfx_accent_text++;
     gfx_touch(fb, x, y, gfx_text_w(font, s) + 1, h);
     for (; *s; s++) {
         const uint8_t *rows;
@@ -279,6 +284,7 @@ int gfx_textf(uint16_t *fb, int x, int y, int font, uint16_t c, const char *fmt,
 int gfx_text_scaled(uint16_t *fb, int x, int y, int font, int scale, uint16_t c, const char *s)
 {
     int h = FONT_H(font);
+    if ((c & 0x7FFF) == (COL_ACCENT & 0x7FFF) || (c & 0x7FFF) == (COL_GLOW & 0x7FFF)) gfx_accent_text++;
     for (; *s; s++) {
         const uint8_t *rows;
         int w = glyph(font, *s, &rows), i, j;

@@ -1,6 +1,6 @@
 repository  swebdan-design/ETCH-DS
 branch      claude/etch-ds-series
-commit      76dc3fa1b9dc96b97abb4bafb767114a1a1a1117
+commit      0d88135bef5447cf5bce2bb8bd1bec625bc8669f
 map         corrosion/*            <- corrosion/*
             common/*               <- common/{ipc.h,seq_core.c,seq_core.h}
             engine/*               <- arm9/source/*

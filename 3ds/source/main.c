@@ -114,6 +114,12 @@ void stats_publish(void)
     m[SM_STRESS] = SH->stress;
     m[SM_DEPTH] = audio3ds_depth;
     m[SM_SEED] = start_seed;
+    m[SM_FILL] = SH->fill;
+    m[SM_FILL_HOLD] = SH->fill_hold;
+    m[SM_QUEUED] = SH->queued;
+    m[SM_SONG] = SH->proj.chain.song;
+    m[SM_NOTE0] = SH->proj.pat[SH->cur].note[0];
+    m[SM_FLAGS0] = SH->proj.pat[SH->cur].flags[0];
 }
 
 /* the UI thread waits for the audio thread (command ring full: never seen) */

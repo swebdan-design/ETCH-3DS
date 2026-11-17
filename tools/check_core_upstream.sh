@@ -20,6 +20,11 @@ check() {   # $1 = file in core/, $2 = file in ETCH-DS
 for f in "$HERE"/corrosion/*; do b=$(basename "$f"); check "corrosion/$b" "corrosion/$b"; done
 for b in ipc.h seq_core.c seq_core.h; do check "common/$b" "common/$b"; done
 for f in "$HERE"/engine/*; do b=$(basename "$f"); check "engine/$b" "arm9/source/$b"; done
-for f in "$HERE"/tests/*; do b=$(basename "$f"); check "tests/$b" "tests/host/$b"; done
+for f in "$HERE"/tests/*; do
+    b=$(basename "$f")
+    if [ -d "$f" ]; then
+        diff -rq "$f" "$SRC/tests/host/$b" >/dev/null || { echo "DIFFERS: core/tests/$b/ vs ETCH-DS/tests/host/$b/"; fail=1; }
+    else check "tests/$b" "tests/host/$b"; fi
+done
 if [ $fail = 0 ]; then echo "OK: core/ is byte-identical to ETCH-DS ($(ls "$HERE"/corrosion "$HERE"/common "$HERE"/engine "$HERE"/tests | grep -c .) files)"; fi
 exit $fail

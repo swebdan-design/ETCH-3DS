@@ -65,5 +65,5 @@ int      frame_end(void);
 uint8_t  plat_is_new3ds(void);
 extern volatile uint32_t ui_frame_ticks_avg, ui_frame_ticks_max;   /* bus clocks */
 
-#define ETCH_3DS_VERSION "0.1"
+#define ETCH_3DS_VERSION "0.2"
 #endif

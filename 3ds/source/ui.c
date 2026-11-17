@@ -515,7 +515,7 @@ static void knob_value(int k, char *o)
     switch (k) {
     case K_WAVE: strcpy(o, waves[v & 3]); break;
     case K_DRIVE: strcpy(o, drives[v & 3]); break;
-    case K_FILT: strcpy(o, v ? "KEY" : "303"); break;
+    case K_FILT: strcpy(o, v ? "KEY" : "FIXED"); break;
     case K_TEST: strcpy(o, v ? "ON" : "OFF"); break;
     default: sprintf(o, "%d", v); break;
     }
@@ -1633,7 +1633,9 @@ void ui_frame(uint32_t down, uint32_t held)
         }
         if (down & KEY_A) app_evolve();
         if (down & KEY_B) app_undo();
-        if (down & KEY_START) app_fill_latch(!SH->fill_hold);     /* SERIES_SPEC.md 2.1: latched fill */
+        /* SERIES_SPEC.md 2.1: latched fill.  Not while L and R are held: that is
+         * the quit combo (SELECT + START + L + R, main.c) on its way in. */
+        if ((down & KEY_START) && (held & (KEY_L | KEY_R)) != (KEY_L | KEY_R)) app_fill_latch(!SH->fill_hold);
         if (down & (KEY_UP | KEY_DOWN)) {                          /* queue the next / previous pattern */
             uint8_t base = SH->queued != 0xFF ? SH->queued : SH->cur;
             app_queue((uint8_t)((base + ((down & KEY_UP) ? 1 : NUM_PATTERNS - 1)) % NUM_PATTERNS));

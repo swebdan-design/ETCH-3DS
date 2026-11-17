@@ -167,6 +167,14 @@ int main(void)
     frames(4);
     shot("live");
 
+    press(KEY_SELECT | KEY_START);                       /* SERIES_SPEC 2.1: latched fill on */
+    frames(40);
+    CHECK(sh.fill_hold, "SELECT + START latches the fill");
+    shot("fill");
+    press(KEY_SELECT | KEY_START);
+    frames(4);
+    CHECK(!sh.fill_hold, "SELECT + START again lets it go");
+
     pad_x = -120;                                        /* PUNCH: Circle Pad left */
     frames(40);
     CHECK(punch_state == PUNCH_ON && punch_mode == 1, "Circle Pad left punches in the low-pass");
@@ -213,7 +221,11 @@ int main(void)
         for (t = 0; t < 6; t++) { tap(6 + t * 51 + 25, 10); frames(2); }
     }
     CHECK(sh.playing, "still playing after a tour of every screen");
-    printf("  screens: title, live, punch, xy, panel, drum, keys, gen, song, file, about 1-4 -> build/host/screen_*.ppm\n");
+    {
+        extern uint32_t gfx_accent_text;
+        CHECK(gfx_accent_text == 0, "no text was set in the accent (%u times)", gfx_accent_text);
+    }
+    printf("  screens: title, live, fill, punch, xy, panel, drum, keys, gen, song, file, about 1-4 -> build/host/screen_*.ppm\n");
     printf("  %u frames, %u blocks, %u evolutions, %u dropped commands\n",
            frame_no, pump_blocks(), sh.evo_commits, pump_cmd_waits);
     printf("test_screens: %d checks, %d failures\n", checks, fails);
