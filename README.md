@@ -2,7 +2,7 @@
 
 **A generative acid machine for the Nintendo 3DS — by Synth Centric**
 
-ETCH 3DS is the Nintendo 3DS sequel to [ETCH DS](https://github.com/swebdan-design/ETCH-DS), which grew out of [ETCH](https://github.com/swebdan-design/Etch---GB) for the Game Boy. It keeps the same composer (CORROSION), the same seed codes, the same 303 at the centre and the same project files. The 3DS adds room to grow.
+ETCH 3DS is a generative acid machine for the Nintendo 3DS. It shares its composer and sound engine with [ETCH DS](https://github.com/swebdan-design/ETCH-DS): the same composer (CORROSION), the same seed codes, the same 303 at the centre and the same project files. The 3DS adds room to grow.
 
 This is **milestone 1, "It squelches in 3D"**. It ports ETCH DS to the 3DS sound for sound, and proves the platform layer before any new instrument is built:
 

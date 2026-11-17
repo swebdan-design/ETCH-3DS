@@ -1363,23 +1363,23 @@ static uint16_t fl_msg_col;
 static uint32_t fl_sig = 0xFFFFFFFF;
 
 
-/* ---- ABOUT (from FILE), as on ETCH and ETCH II ------------------------------ */
+/* ---- ABOUT (from FILE): four pages, standalone ------------------------------- */
 #define N_ABOUT 4
 static const char * const about_title[N_ABOUT] = { "ETCH 3DS", "GENERATIVE MUSIC", "SYNTH CENTRIC", "CREDITS" };
 static const char * const about_text[N_ABOUT] = {
     "A generative acid machine for the Nintendo 3DS, by Synth Centric. Version " ETCH_3DS_VERSION ".\n"
-    "The sequel to ETCH DS. The same composer, CORROSION, plays the same real-time 303 voice, six drum lanes "
-    "and effects chain, sound for sound. The touch screen is for performing, and the Circle Pad punches "
-    "a filter into the mix: left low-pass, right high-pass.",
+    "Its composer, CORROSION, writes a bass line and drums and keeps rewriting them while they play. "
+    "A real-time 303 voice, six synthesised drum lanes and an effects chain play them. The touch screen "
+    "is for performing, and the Circle Pad punches a filter into the mix: left low-pass, right high-pass.",
     "Generative music is made by a system of rules and chance instead of being fixed note by note.\n"
     "CORROSION composes a bass line and drums from a seed. In DRIFT or CORRODE it keeps rewriting them, "
-    "so every listen is different. A 12-digit ETCH seed code makes the same groove on Game Boy, "
-    "Game Boy Advance, DS and 3DS.",
+    "so every listen is different. A 12-digit seed code always makes the same groove: "
+    "share the code to share the song.",
     "Dan Schwebel, known as Synth Centric, is an Australian beat maker, music producer, writer and educator.\n"
-    "ETCH, ETCH II, ETCH DS and ETCH 3DS are Synth Centric releases.",
+    "ETCH 3DS is a Synth Centric release.",
     "Code: MIT licence.\n"
     "Music, artwork and names: (c) Synth Centric.\n"
-    "CORROSION: from ETCH 2.5, MIT, unchanged. Sound engine: from ETCH DS, unchanged.\n"
+    "CORROSION and the sound engine: MIT licence.\n"
     "Built with devkitARM and libctru. Every sound is synthesised by the 3DS; there are no recorded samples.",
 };
 static uint8_t fl_about, ab_page;

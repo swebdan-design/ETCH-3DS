@@ -29,12 +29,13 @@ Backups of every repository before this work are on the branches `claude/backup-
    - **FILE:** the source button cycles DS → GB → GBA; GBA imports `/etch_ds/etch_gba.sav`.
 3. `docs/SERIES_SPEC.md` copied; `make check` verifies it.
 4. Host tests: 44 + 231 + 81 + 70 + PUNCH 19 + screens 6, 0 failures.
+5. The ABOUT pages read as a standalone release: no "sequel to ETCH DS". Page 1 describes ETCH 3DS only; the generative music page says a seed code always makes the same groove ("share the code to share the song") without naming other consoles; the Synth Centric page says "ETCH 3DS is a Synth Centric release."; the credits keep the licences but don't say "from ETCH 2.5" or "from ETCH DS".
 
 ## Your tasks
 
 Work on the branch `claude/etch-3ds-series`. Commit as you go and push to it. Don't merge, and don't open a pull request unless asked.
 
-1. **Re-sync the core.** ETCH-DS moved on after the 3DS sync: it is now version 0.4 (`ETCH_DS_VERSION` in `arm9/source/app.h`, part of the core) and its host test reads the ETCH II fixture from a `GBA_FIXTURE` path. Run `tools/sync_core.sh` against ETCH-DS `claude/etch-ds-series` HEAD, then `make test`. `tests/host/Makefile` already passes `-DGBA_FIXTURE` for the 3DS layout. Never edit `core/` by hand.
+1. **Check the core.** `core/` is already synced from ETCH-DS `claude/etch-ds-series` (ETCH DS 0.4). If that branch has moved on since, re-run `tools/sync_core.sh` against its HEAD; then `make test`. `tests/host/Makefile` already passes `-DGBA_FIXTURE` for the 3DS layout. Never edit `core/` by hand.
 2. **Build for the console** with devkitARM + libctru (`make`, or `docker run --rm -v "$PWD":/work -w /work devkitpro/devkitarm make`). Expect to fix console-only compile issues: the UI changes were only compiled on the host. Keep the 3DS UI's changes equivalent to ETCH DS's (compare with ETCH-DS `arm9/source/ui.c`).
 3. **Run every existing check:** `make test`, `tools/arm_parity.sh`, `tools/check_audio_path.py` on `etch_3ds.elf`, and the Azahar harness (`tools/run_azahar.py`, including `--tour`, `--saves`, `--punch`, `--stress`, and `--model new3ds`). Zero dropouts, as in milestone 1.
 4. **Check the series controls on the console build** (extend the Azahar runner if needed, as ETCH-DS did in `tools/check_series_controls.py`):
@@ -47,7 +48,7 @@ Work on the branch `claude/etch-3ds-series`. Commit as you go and push to it. Do
    - The accent shows where the spec says, and no text is drawn in it.
 5. **Version:** bump `ETCH_3DS_VERSION` (`3ds/source/platform.h`) from 0.1 to **0.2**. The title and ABOUT show it.
 6. **Screenshots:** regenerate `docs/images` (host `test_screens` + `tools/screens_png.py`, and `azahar.png` from the emulator).
-7. **Manual:** write `docs/ETCH_3DS_Manual.md`, modelled on ETCH-DS `docs/ETCH_DS_Manual.md` (same sections, plain language, screenshots), plus the 3DS-only parts: PUNCH on the Circle Pad (low-pass left, high-pass right, quantised to the next 16th, snaps back), the larger screens, the quit combo, `dspfirm.cdc` (run DSP1 once if there is no sound), the shared save file with ETCH DS, and the GB and GBA imports. Render it to PDF the way ETCH-DS does (`tools/make_pdf_manual.py`: Markdown → HTML → Chromium PDF).
+7. **Manual:** write `docs/ETCH_3DS_Manual.md`, modelled on ETCH-DS `docs/ETCH_DS_Manual.md`. It must read as a standalone release: never "sequel" or "successor". Other consoles are only mentioned where a feature needs them: the save imports, and the shared save file with ETCH DS. Same sections (plain language, screenshots), plus the 3DS-only parts: PUNCH on the Circle Pad (low-pass left, high-pass right, quantised to the next 16th, snaps back), the larger screens, the quit combo, `dspfirm.cdc` (run DSP1 once if there is no sound), the shared save file with ETCH DS, and the GB and GBA imports. Render it to PDF the way ETCH-DS does (`tools/make_pdf_manual.py`: Markdown → HTML → Chromium PDF).
 8. **Release package** in `release/`: `etch_3ds.3dsx`, `ETCH_3DS_Manual.pdf` and `.md`, `ETCH_3DS_source.zip` (`git archive` of the committed tree, without `release/`) and `SHA256SUMS.txt`. Add a "Release (version 0.2)" section to the README listing them, as ETCH-DS does.
 9. **Report:** a short `docs/SERIES_UPDATE_REPORT.md`: what changed, every test with its result, and what still needs real hardware (a real 3DS: sound through `ndsp`, the accent on the top screen, saves on the SD card).
 
@@ -57,4 +58,5 @@ Work on the branch `claude/etch-3ds-series`. Commit as you go and push to it. Do
 - The spec is the contract: the same button never means something different on another ETCH. 3DS-only additions (Circle Pad, 3D slider, ZL/ZR) may add meanings but never change existing ones.
 - Text is never set in the accent colour; text on an accent fill is black.
 - Seed codes: one format for the whole series (spec section 5). When OXIDE is built, it seeds from the fourth group of ETCH II's 16-digit code. The first 12 digits are always CORROSION's.
+- ABOUT pages and manuals read as a standalone release (no "sequel" / "successor").
 - Report results honestly: if something couldn't be run, say so.
