@@ -4,7 +4,7 @@
 
 ETCH 3DS is a generative acid machine for the Nintendo 3DS. It shares its composer and sound engine with [ETCH DS](https://github.com/swebdan-design/ETCH-DS): the same composer (CORROSION), the same seed codes, the same 303 at the centre and the same project files. The 3DS adds room to grow.
 
-This is **milestone 1, "It squelches in 3D"**. It ports ETCH DS to the 3DS sound for sound, and proves the platform layer before any new instrument is built:
+This is **version 0.2**: milestone 1, "It squelches in 3D", brought up to the ETCH series spec ([`docs/SERIES_SPEC.md`](docs/SERIES_SPEC.md)). The user manual is [`docs/ETCH_3DS_Manual.md`](docs/ETCH_3DS_Manual.md) (PDF in `release/`). What it does:
 
 * **Press START, hear music.**
   * The title reads "ETCH 3DS", "A generative acid machine", "by Synth Centric", PRESS START.
@@ -24,11 +24,24 @@ This is **milestone 1, "It squelches in 3D"**. It ports ETCH DS to the 3DS sound
 
 ![ETCH 3DS: title, LIVE, PUNCH, XY, SYNTH, DRUM, KEYS, GEN, SONG, FILE, ABOUT](docs/images/screens.png)
 
-Running in Azahar (PUNCH low-pass, CPU test, XY, KEYS, a Game Boy song imported, the title):
+Running in Azahar (PUNCH low-pass, a latched fill, the CPU test, KEYS, the ETCH II save list, an ETCH II song imported, the title):
 
 ![ETCH 3DS in the Azahar emulator](docs/images/azahar.png)
 
-The milestone report is [`docs/MILESTONE1_REPORT.md`](docs/MILESTONE1_REPORT.md), the design is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), and parked ideas are in [`docs/IDEAS.md`](docs/IDEAS.md).
+The series update for 0.2 is reported in [`docs/SERIES_UPDATE_REPORT.md`](docs/SERIES_UPDATE_REPORT.md). The milestone report is [`docs/MILESTONE1_REPORT.md`](docs/MILESTONE1_REPORT.md), the design is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), and parked ideas are in [`docs/IDEAS.md`](docs/IDEAS.md).
+
+## Release (version 0.2)
+
+The `release/` folder is the delivery:
+
+| File | What it is |
+|---|---|
+| `etch_3ds.3dsx` | the app (copy it to `/3ds/` on the SD card; start it from the Homebrew Launcher) |
+| `ETCH_3DS_Manual.pdf` (and `.md`) | the user manual |
+| `ETCH_3DS_source.zip` | the source at this release (`git archive` of the committed tree, without `release/`) |
+| `SHA256SUMS.txt` | checksums of the files above |
+
+`tools/check_series_controls.py` runs the `.3dsx` in Azahar and checks the series controls, FILE's save sources, an ETCH II import, the accent and the quit combo (15 checks).
 
 ## Controls
 
@@ -49,7 +62,7 @@ The milestone report is [`docs/MILESTONE1_REPORT.md`](docs/MILESTONE1_REPORT.md)
 | hold R | fill while held: a fresh variation every bar until you let go |
 | hold L while dragging | temporary move: it springs back when you let go |
 | **Circle Pad left / right** | **PUNCH: low-pass / high-pass, the further the stronger; quantised to the next 16th** |
-| SELECT + START + L + R | quit |
+| SELECT + START + L + R | quit (SELECT + START is not a fill while L and R are held) |
 
 Touch is single-point everywhere, and it is never needed for sound. The Circle Pad is never a cursor: it is for performing.
 
@@ -102,10 +115,10 @@ python3 tools/run_azahar.py --seconds 60
 
 * `make test` checks the core checksums, then runs:
   * ETCH's 44 CORROSION tests (unmodified) against the copied CORROSION
-  * ETCH DS's sequencer (231), sound-engine (81) and save-file (56) tests against the copied core
+  * ETCH DS's sequencer (231), sound-engine (81) and save-file (70, including an import from a real ETCH II save) tests against the copied core
   * the **sound-parity test**: the boot song and a 64-second script of edits, through ETCH DS's path and through ETCH 3DS's audio thread, PUNCH taps and all. The two must be byte-identical.
   * the PUNCH, retro-buffer and command-ring tests
-  * a render of every screen
+  * a render of every screen, checking that no text is ever set in the accent
 
   If the ELF is built, it also runs the audio-path check.
 * `tools/arm_parity.sh` compiles the parity test with the consoles' own compilers and runs both under qemu-arm. Both must write the same bytes as the host.
@@ -118,6 +131,8 @@ python3 tools/run_azahar.py --seconds 60
   * It records the audio and takes screenshots.
   * It reads the CPU meter, latency, dropouts and sequencer counters from emulated RAM.
   * It checks that the emulator plays exactly the samples the shared core renders on the host from the same seed. That holds up to the first evolution, where CORROSION takes the moment's entropy by design.
+* `tools/check_series_controls.py` (add `--model new3ds`) checks the series controls on the `.3dsx` in the same harness.
+* `tools/make_pdf_manual.py` renders the manual to PDF (Python `markdown`, Node.js with Playwright).
 
 ## Layout
 
@@ -126,7 +141,8 @@ core/          ETCH DS's shared core, unmodified and checksummed (see core/UPSTR
 3ds/source/    the 3DS layer: audio thread, block pump, PUNCH, graphics, input, screens
 tests/host/    ETCH 3DS's host tests (parity, PUNCH, screens) and helpers
 tools/         core sync and checks, audio-path checker, ARM parity, Azahar harness + runner
-docs/          architecture, milestone report, ideas
+docs/          the series spec, the manual, architecture, reports, ideas
+release/       the release package
 ```
 
 The shared core is never edited in this repository. A change goes to ETCH-DS first and comes here with `tools/sync_core.sh`. `make ds-check DS=/path/to/ETCH-DS` proves the two still match.

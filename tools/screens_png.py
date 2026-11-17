@@ -13,7 +13,7 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "build/host")
 DST = os.path.join(ROOT, "docs/images")
-NAMES = ["title", "live", "punch", "xy", "panel", "drum", "keys", "gen", "song", "file", "about1", "about3"]
+NAMES = ["title", "live", "fill", "punch", "xy", "panel", "drum", "keys", "gen", "song", "file", "about1", "about3"]
 
 os.makedirs(DST, exist_ok=True)
 ims = []
