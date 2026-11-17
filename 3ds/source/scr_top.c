@@ -187,7 +187,7 @@ static void draw_stats(void)
     }
     stat(0, "MODE", corr_mode_names[pr->gen.mode % EVO_COUNT], COL_TEXT);
     sprintf(b, "%02d", SH->cur);
-    stat(1, SH->fill ? "PATTERN  FILL" : "PATTERN", b, SH->fill ? COL_ACCENT : COL_TEXT);
+    stat(1, SH->fill ? "PATTERN  FILL" : "PATTERN", b, COL_TEXT);       /* text is never in the accent */
     sprintf(b, "%03d", pr->pat[SH->cur].gen);
     stat(2, "GENERATION", b, COL_TEXT);
     if (bars) sprintf(b, "%d BAR%s", bars, bars == 1 ? "" : "S");
@@ -198,7 +198,7 @@ static void draw_stats(void)
     if (ps == PUNCH_ON || ps == PUNCH_RELEASE) sprintf(b, "%s %d%%", punch_mode == 1 ? "LP" : "HP", (pa * 100) / 255);
     else if (ps == PUNCH_ARMED) strcpy(b, "ON NEXT 16TH");
     else strcpy(b, "-");
-    stat(5, "PUNCH", b, ps == PUNCH_ON ? COL_ACCENT : COL_TEXT3);
+    stat(5, "PUNCH", b, ps == PUNCH_ON ? COL_TEXT : COL_TEXT3);
 }
 
 static void draw_scope(void)

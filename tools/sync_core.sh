@@ -19,6 +19,10 @@ done
 # ETCH DS's host tests, so they keep running against this copy
 cp "$SRC"/tests/host/test_generator.c "$SRC"/tests/host/test_seq.c "$SRC"/tests/host/test_dsp.c \
    "$SRC"/tests/host/test_storage.c "$SRC"/tests/host/SHA256SUMS "$DST/tests/"
+if [ -d "$SRC"/tests/host/fixtures ]; then           # test data (ETCH DS: a real ETCH II save)
+    mkdir -p "$DST/tests/fixtures"
+    cp "$SRC"/tests/host/fixtures/* "$DST/tests/fixtures/"
+fi
 commit=$(git -C "$SRC" rev-parse HEAD)
 branch=$(git -C "$SRC" rev-parse --abbrev-ref HEAD)
 cat > "$DST/UPSTREAM" <<EOT

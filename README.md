@@ -17,12 +17,12 @@ This is **milestone 1, "It squelches in 3D"**. It ports ETCH DS to the 3DS sound
   * It comes in on the next 16th and snaps straight back when you let go.
   * The sequencer never stops underneath.
   * A retro buffer always holds the last bar of the mix and of the drum bus on its own.
-* **The ETCH DS screens, ported** to 400 × 240 (top) and 320 × 240 (touch): LIVE, XY, PANEL/DRUM, KEYS, GEN, SONG/FILE and ABOUT, in ETCH DS's black-and-white design system.
+* **The ETCH DS screens, ported** to 400 × 240 (top) and 320 × 240 (touch): LIVE, XY, SYNTH/DRUM, KEYS, GEN, SONG/FILE and ABOUT, in ETCH DS's design system: black and white with the series accent **#F45423** for whatever is happening now (`docs/SERIES_SPEC.md`).
 * **Saves.**
   * ETCH DS saves (versions 1 and 2) load from `/etch_ds/etch_ds.sav`, and new saves go to the same file.
-  * ETCH Game Boy saves import from `/etch_ds/etch_gb.sav`.
+  * ETCH Game Boy saves import from `/etch_ds/etch_gb.sav`, and ETCH II (Game Boy Advance) saves from `/etch_ds/etch_gba.sav`.
 
-![ETCH 3DS: title, LIVE, PUNCH, XY, PANEL, DRUM, KEYS, GEN, SONG, FILE, ABOUT](docs/images/screens.png)
+![ETCH 3DS: title, LIVE, PUNCH, XY, SYNTH, DRUM, KEYS, GEN, SONG, FILE, ABOUT](docs/images/screens.png)
 
 Running in Azahar (PUNCH low-pass, CPU test, XY, KEYS, a Game Boy song imported, the title):
 
@@ -35,14 +35,18 @@ The milestone report is [`docs/MILESTONE1_REPORT.md`](docs/MILESTONE1_REPORT.md)
 | | |
 |---|---|
 | START | play / stop (the moment you press it seeds the living song) |
-| SELECT + LEFT / RIGHT | previous / next tab (or tap the tab bar; tap PANEL or SONG again for its second page) |
+| SELECT + LEFT / RIGHT | previous / next tab (or tap the tab bar; tap SYNTH or SONG again for its second page) |
 | D-pad | move the cursor on the current tab |
 | A | place or toggle |
-| A + D-pad | change the value under the cursor |
+| A + D-pad | change the value under the cursor (LIVE bass: LEFT/RIGHT a semitone, UP/DOWN an octave, as on every ETCH) |
+| X / Y | on a LIVE bass note: accent / slide on or off |
 | B + A | delete |
 | SELECT + A | evolve at the next bar |
 | SELECT + B | undo the last generation |
-| hold R | latched fill: a fresh variation every bar until you let go |
+| SELECT + UP / DOWN | queue the next / previous pattern (song mode turns off) |
+| SELECT + START | latched fill on / off |
+| B (tap, on LIVE) | latched fill on / off |
+| hold R | fill while held: a fresh variation every bar until you let go |
 | hold L while dragging | temporary move: it springs back when you let go |
 | **Circle Pad left / right** | **PUNCH: low-pass / high-pass, the further the stronger; quantised to the next 16th** |
 | SELECT + START + L + R | quit |
@@ -55,6 +59,7 @@ ETCH 3DS uses ETCH DS's save file, `/etch_ds/etch_ds.sav` on the SD card: 16 slo
 
 * **Shared with the DS.** A song saved on the DS opens on the 3DS, and one saved on the 3DS opens on the DS.
 * **Game Boy imports.** To import ETCH Game Boy projects, copy the cartridge's 32 KB `.sav` to `/etch_ds/etch_gb.sav`.
+* **Game Boy Advance imports.** To import ETCH II projects, copy its 32 KB `.sav` to `/etch_ds/etch_gba.sav` (FILE: press GB, then GBA). The song, generator, patterns, tempo, chain and drum voicing come across; your current sound is kept.
 * **3DS-only data (later milestones).** Chords, PUNCH lanes and the like will go in a sidecar file, `/etch_ds/etch_3ds.sav`, with one slot per slot of the DS file. The DS file stays exactly what ETCH DS expects.
 
 Sound needs the DSP firmware dump that every 3DS homebrew audio app uses (`sdmc:/3ds/dspfirm.cdc`). If it's missing, run DSP1 once. Without it, the title says so and the app runs silently.

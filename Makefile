@@ -27,6 +27,8 @@ clean:
 
 # CORROSION and the shared core must stay byte-identical: refuse to build otherwise
 check:
+	@echo "  CHECK   docs/SERIES_SPEC.md (the ETCH series spec; master in ETCH DS)"
+	@cd docs && sha256sum --quiet -c SERIES_SPEC.sha256
 	@echo "  CHECK   core/SHA256SUMS (ETCH DS's shared core, unmodified)"
 	@cd core && sha256sum --quiet -c SHA256SUMS
 	@echo "  CHECK   core/corrosion/SHA256SUMS (CORROSION from ETCH 2.5)"

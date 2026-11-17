@@ -56,7 +56,7 @@ $(OUT)/test_dsp: $(CORE)/tests/test_dsp.c $(CORE)/common/seq_core.c $(ENGINE) $(
 
 $(OUT)/test_storage: $(CORE)/tests/test_storage.c $(CORE)/engine/storage.c $(CORR)
 	@mkdir -p $(OUT)
-	$(HOSTCC) $(CFLAGS) -o $@ $^
+	$(HOSTCC) $(CFLAGS) -DGBA_FIXTURE='"$(abspath $(CORE)/tests/fixtures/etch_gba.sav)"' -o $@ $^
 
 $(OUT)/parity_ds: test_parity.c $(CORE)/common/seq_core.c $(ENGINE) $(APP) $(CORR)
 	@mkdir -p $(OUT)
