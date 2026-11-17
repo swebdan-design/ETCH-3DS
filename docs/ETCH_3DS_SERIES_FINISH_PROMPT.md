@@ -29,7 +29,7 @@ Backups of every repository before this work are on the branches `claude/backup-
    - **FILE:** the source button cycles DS → GB → GBA; GBA imports `/etch_ds/etch_gba.sav`.
 3. `docs/SERIES_SPEC.md` copied; `make check` verifies it.
 4. Host tests: 44 + 231 + 81 + 70 + PUNCH 19 + screens 6, 0 failures.
-5. The ABOUT pages read as a standalone release: no "sequel to ETCH DS". Page 1 describes ETCH 3DS only; the generative music page says a seed code always makes the same groove ("share the code to share the song") without naming other consoles; the Synth Centric page says "ETCH 3DS is a Synth Centric release."; the credits keep the licences but don't say "from ETCH 2.5" or "from ETCH DS".
+5. The ABOUT pages use the series' shared texts, the same on every ETCH: page 1 "A generative acid machine by Synth Centric. Version …" plus "Its composer, CORROSION, writes the music and keeps rewriting it." and the 3DS's sound line; GENERATIVE MUSIC and SYNTH CENTRIC word for word as on the other machines; CREDITS in the same pattern. No "sequel" or "successor". If you change the version, only the number changes.
 
 ## Your tasks
 
